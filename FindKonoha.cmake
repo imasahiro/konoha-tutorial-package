@@ -1,0 +1,50 @@
+# Find Konoha
+# Once done this will define
+#
+#  MINIKONOHA_INCLUDE_DIR - where to find minikonoha.h
+#  MINIKONOHA_LIBRARIES   - where to find libminikonoha.{dylib|so|dll}
+#  MINIKONOHA_FOUND       - True if minikonoha found.
+#
+if(MINIKONOHA_INCLUDE_DIR)
+# Already in cache, be silent
+	set(MINIKONOHA_FIND_QUIETLY TRUE)
+endif(MINIKONOHA_INCLUDE_DIR)
+
+if(APPLE)
+	# support MacPorts
+	FIND_PATH(MINIKONOHA_INCLUDE_DIR minikonoha.h
+		PATHS
+		/opt/local/include/
+		NO_CMAKE_SYSTEM_PATH
+	)
+	FIND_LIBRARY(MINIKONOHA_LIBRARIES NAMES minikonoha libminikonoha
+		PATHS
+		/opt/local/lib/
+		NO_CMAKE_SYSTEM_PATH
+	)
+endif(APPLE)
+
+FIND_PATH(MINIKONOHA_INCLUDE_DIR minikonoha.h PATHS /opt/local/include)
+string(REGEX REPLACE "(.*)/include/?" "\\1" MINIKONOHA_INCLUDE_BASE_DIR "${MINIKONOHA_INCLUDE_DIR}")
+
+FIND_LIBRARY(MINIKONOHA_LIBRARIES NAMES minikonoha libminikonoha
+	HINTS "${MINIKONOHA_INCLUDE_BASE_DIR}/lib" PATHS /opt/local/lib)
+
+if(MINIKONOHA_INCLUDE_DIR AND MINIKONOHA_LIBRARIES)
+	SET(MINIKONOHA_FOUND TRUE)
+endif(MINIKONOHA_INCLUDE_DIR AND MINIKONOHA_LIBRARIES)
+
+if(MINIKONOHA_FOUND)
+	if(NOT MINIKONOHA_FIND_QUIETLY)
+		MESSAGE(STATUS "Found libminikonoha: ${MINIKONOHA_LIBRARIES}")
+	endif(NOT MINIKONOHA_FIND_QUIETLY)
+else(MINIKONOHA_FOUND)
+	if(MINIKONOHA_FIND_REQUIRED)
+		MESSAGE(FATAL_ERROR "Could not find libminikonoha")
+	endif(MINIKONOHA_FIND_REQUIRED)
+endif(MINIKONOHA_FOUND)
+
+MARK_AS_ADVANCED(
+	MINIKONOHA_INCLUDE_DIR
+	MINIKONOHA_LIBRARIES
+)
