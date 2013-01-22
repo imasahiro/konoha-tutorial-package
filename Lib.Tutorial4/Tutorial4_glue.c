@@ -51,8 +51,8 @@ static kbool_t Tutorial4_PackupNameSpace(KonohaContext *kctx, kNameSpace *ns, in
 	}
 
 	{ /* Func[void, Object, String] */
-		kparamtype_t p = {KType_Object, KType_String, 0};
-		KClass *FuncClass = KLIB KClass_Generics(kctx, KClass_Func, KType_void, 2, &p);
+		kparamtype_t p[] = {{KType_Object}, {KType_String}};
+		KClass *FuncClass = KLIB KClass_Generics(kctx, KClass_Func, KType_void, 2, p);
 	}
 
 	{ /* Array[int] */
