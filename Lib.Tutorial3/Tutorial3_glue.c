@@ -28,6 +28,7 @@
 #include <minikonoha/sugar.h>
 #include <minikonoha/klib.h>
 #include <minikonoha/import/methoddecl.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,10 +37,113 @@ extern "C" {
 /* ------------------------------------------------------------------------ */
 /* Tutorial3 */
 
+struct local_data {
+	int   field1;
+	float field2;
+};
+
+typedef struct kPerson {
+	kObjectHeader h;
+	kString *name;
+	kint_t   age;
+	struct local_data *data;
+} kPerson;
+
+static void Person_Init(KonohaContext *kctx, kObject *o, void *conf)
+{
+	/* This function is called when generating the instance of this class.
+	 * Moreover, it is called when generating the Null object of this class. */
+	struct kPerson *p = (struct kPerson *) o;
+	p->name = KNULL(String);
+	p->age  = 0;
+	p->data = (struct local_data *) malloc(sizeof(struct local_data));
+}
+
+static void Person_Free(KonohaContext *kctx, kObject *o)
+{
+	/* This function is called at the time of object destruction. 
+	 * It is not necessary to destruct the field of the object which GC has managed. */
+	struct kPerson *p = (struct kPerson *) o;
+	if(p->data != NULL) {
+		free(p->data);
+		p->data = NULL;
+	}
+}
+
+static void Person_p(KonohaContext *kctx, KonohaValue *v, int pos, KBuffer *wb)
+{
+	/* This function is called when serializing the object. */
+	struct kPerson *p = (struct kPerson *) v[pos].asObject;
+	KLIB KBuffer_Write(kctx, wb, kString_text(p->name), kString_size(p->name));
+	KLIB KBuffer_Write(kctx, wb, ",", 1);
+	KLIB KBuffer_printf(kctx, wb, KINT_FMT, p->age);
+}
+
+static void Person_Reftrace(KonohaContext *kctx, kObject *o, KObjectVisitor *visitor)
+{
+	/* Garbage collector (GC) cannot recognize in which position of the field
+	 * an object exists. The function tells to GC which object should be traced. */
+	struct kPerson *p = (struct kPerson *) o;
+	/* If p->some_field is Nullable, please use 
+	 * KRefTraceNullable() macro instead of KRefTrace(). */
+	KRefTrace(p->name);
+	/* It is not necessary to trace p->age field,
+	 * because p->age is not an Object */
+}
+
+//## Person Person.new(String name, int age);
+static KMETHOD Person_new(KonohaContext *kctx, KonohaStack *sfp)
+{
+	/* You do not need to allocate object because
+	 * object is allocated by Runtime. */
+	struct kPerson *p = (struct kPerson *) sfp[0].asObject;
+	kString *name = sfp[1].asString;
+	kint_t   age  = sfp[2].intValue;
+	/* If you want to determine the type of the return value,
+	 * please check KGetReturnType(sfp) . */
+	KFieldSet(p, p->name, name);
+	p->age = age;
+	KReturn(p);
+}
+
+//## String Person.say();
+static KMETHOD Person_say(KonohaContext *kctx, KonohaStack *sfp)
+{
+	struct kPerson *p = (struct kPerson *) sfp[0].asObject;
+	kString *name = p->name;
+	/* When you want to operate with a raw string, please use kString_text() macro
+	 * to acquire the pointer of a raw string. */
+	const char *text = kString_text(name);
+	char *buf = (char *)alloca(16 + kString_size(name));
+	sprintf(buf, "hello , %s!", text);
+	KReturn(KLIB new_kString(kctx, OnStack, buf, strlen(buf), StringPolicy_TEXT));
+}
 
 // --------------------------------------------------------------------------
 static kbool_t Tutorial3_PackupNameSpace(KonohaContext *kctx, kNameSpace *ns, int option, KTraceInfo *trace)
 {
+	/* Class Definition */
+	/* If you want to create Generic class like Array<T>, see JavaScript.Array package */
+	KDEFINE_CLASS defPerson = {0};
+	SETSTRUCTNAME(defPerson, Person);
+	defPerson.cflag     = KClassFlag_Final;
+	defPerson.init      = Person_Init;
+	defPerson.p         = Person_p;
+	defPerson.reftrace  = Person_Reftrace;
+	defPerson.free      = Person_Free;
+	KClass *PersonClass = KLIB kNameSpace_DefineClass(kctx, ns, NULL, &defPerson, trace);
+
+	/* You can define methods with the following procedures. */
+	int KType_Person = PersonClass->typeId;
+	int FN_x = KFieldName_("x");
+	int FN_y = KFieldName_("y");
+	KDEFINE_METHOD MethodData[] = {
+		_Public, _F(Person_new), KType_Person, KType_Person, KMethodName_("new"), 2, KType_String, FN_x, KType_Int, FN_y,
+		_Public, _F(Person_say), KType_String, KType_Person, KMethodName_("say"), 0,
+		DEND, /* <= sentinel */
+	};
+	KLIB kNameSpace_LoadMethodData(kctx, ns, MethodData, trace);
+
 	return true;
 }
 

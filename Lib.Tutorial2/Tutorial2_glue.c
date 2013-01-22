@@ -56,7 +56,7 @@ KMETHOD System_hello_world(KonohaContext *kctx, KonohaStack *sfp)
 static kbool_t Tutorial2_PackupNameSpace(KonohaContext *kctx, kNameSpace *ns, int option, KTraceInfo *trace)
 {
 	KDEFINE_METHOD MethodData[] = {
-		_Public|_Im, _F(System_hello_world), KType_int, KType_System, KMethodName_("hello_world"), 1, KType_int, KFieldName_("n"),
+		_Public|_Im, _F(System_hello_world), KType_Int, KType_System, KMethodName_("hello_world"), 1, KType_Int, KFieldName_("n"),
 		DEND,
 	};
 	KLIB kNameSpace_LoadMethodData(kctx, ns, MethodData, trace);
