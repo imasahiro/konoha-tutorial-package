@@ -45,7 +45,7 @@ static int hello_world(int n)
 	return i;
 }
 
-KMETHOD System_hello_world(KonohaContext *kctx, KonohaStack *sfp)
+static KMETHOD System_hello_world(KonohaContext *kctx, KonohaStack *sfp)
 {
 	int n = sfp[1].intValue;
 	int ret = hello_world(n);

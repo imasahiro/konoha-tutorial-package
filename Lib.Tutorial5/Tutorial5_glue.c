@@ -34,62 +34,49 @@ extern "C" {
 #endif
 
 /* ------------------------------------------------------------------------ */
-/* Tutorial4 */
-
+/* Tutorial5 */
+static KMETHOD System_hello_world(KonohaContext *kctx, KonohaStack *sfp)
+{
+	int n = sfp[1].intValue;
+	kMethod *mtd = NULL;
+	BEGIN_UnusedStack(lsfp);
+	KUnsafeFieldSet(lsfp[K_CALLDELTA+0].asObject, K_NULL);
+	KUnsafeFieldSet(lsfp[K_CALLDELTA+1].intValue, n);
+	{
+		KStackSetMethodAll(lsfp,
+				KLIB Knull(kctx, KClass_Int), /* Default Object of ReturnType */
+				0/*UL*/, /* line number */
+				mtd, /* call method */
+				1 /* argc */);
+		KStackCall(lsfp);
+	}
+	END_UnusedStack();
+	int ret = lsfp[0].intValue;
+	KReturnUnboxValue(ret);
+}
 
 // --------------------------------------------------------------------------
-static kbool_t Tutorial4_PackupNameSpace(KonohaContext *kctx, kNameSpace *ns, int option, KTraceInfo *trace)
+static kbool_t Tutorial5_PackupNameSpace(KonohaContext *kctx, kNameSpace *ns, int option, KTraceInfo *trace)
 {
-	{ /* Func[int, int] */
-		kparamtype_t p = {KType_Int, 0};
-		KClass *FuncClass = KLIB KClass_Generics(kctx,
-				KClass_Func, /* this class */
-				KType_Int,   /* return type */
-				1,           /* param size */
-				&p           /* param list */
-				);
-		(void)FuncClass;
-	}
-
-	{ /* Func[void, Object, String] */
-		kparamtype_t p[] = {{KType_Object, 0}, {KType_String, 0}, {}};
-		KClass *FuncClass = KLIB KClass_Generics(kctx, KClass_Func, KType_void, 2, p);
-		(void)FuncClass;
-	}
-
-	{ /* Array[int] */
-		kparamtype_t p = {KType_Int, 0};
-		KClass *ArrayClass = KLIB KClass_Generics(kctx,
-				KClass_Array, /* this class */
-				KType_void,   /* return type */
-				1,           /* param size */
-				&p           /* param list */
-				);
-		(void)ArrayClass;
-	}
-
-	{ /* Array[int] */
-		KClass *ArrayClass = KClass_p0(kctx,
-				KClass_Array, /* this class */
-				KType_Int     /* param type */
-				);
-		(void)ArrayClass;
-	}
-
+	KDEFINE_METHOD MethodData[] = {
+		_Public|_Im, _F(System_hello_world), KType_Int, KType_System, KMethodName_("hello_world"), 1, KType_Int, KFieldName_("n"),
+		DEND,
+	};
+	KLIB kNameSpace_LoadMethodData(kctx, ns, MethodData, trace);
 	return true;
 }
 
-static kbool_t Tutorial4_ExportNameSpace(KonohaContext *kctx, kNameSpace *ns, kNameSpace *exportNS, int option, KTraceInfo *trace)
+static kbool_t Tutorial5_ExportNameSpace(KonohaContext *kctx, kNameSpace *ns, kNameSpace *exportNS, int option, KTraceInfo *trace)
 {
 	return true;
 }
 
-KDEFINE_PACKAGE *Tutorial4_Init(void)
+KDEFINE_PACKAGE *Tutorial5_Init(void)
 {
 	static KDEFINE_PACKAGE d = {0};
-	KSetPackageName(d, "Tutorial4", "0.0");
-	d.PackupNameSpace = Tutorial4_PackupNameSpace;
-	d.ExportNameSpace = Tutorial4_ExportNameSpace;
+	KSetPackageName(d, "Tutorial5", "0.0");
+	d.PackupNameSpace = Tutorial5_PackupNameSpace;
+	d.ExportNameSpace = Tutorial5_ExportNameSpace;
 	return &d;
 }
 
